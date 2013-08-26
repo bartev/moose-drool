@@ -1,10 +1,3 @@
-/**
- * Created with IntelliJ IDEA.
- * User: bvartanian
- * Date: 8/13/13
- * Time: 12:58 AM
- * To change this template use File | Settings | File Templates.
- */
+val fname = "Documents/my-file.tex"
 
-val a = 3
-println(a + a)
+fname.lastIndexOf('.')
