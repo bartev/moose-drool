@@ -1,0 +1,47 @@
+key, value
+"account:age:days",0
+"account:age:hours",2
+"account:age:minutes",173
+"account:age:seconds",10403
+"api","evt"
+"app:build_ver",201308201327
+"app:build_ver_day",20130820
+"app:client_ver","1.23.1"
+"deck:cards",2
+"deck:full_pct",50
+"deck:is_full",0
+"deck:max_slots",4
+"deck:strength",1343
+"event:ts","2013-08-21T00:19:28.008546"
+"l",2
+"ltv:hard",5220.00
+"ltv:soft",79370.00
+"ltv:usd",50.00
+"ltv:usd_10",50.00
+"ltv:usd_100",50.00
+"memTotal","1 Gb"
+"memUsage","0 Mb"
+"mp_name_tag","BlahSeer_2461"
+"n","startup"
+"player:group",7
+"player:level",2
+"player:max_quest_idx",7
+"player:name","BlahSeer_2461"
+"player:uid",1877
+"playerName","BlahSeer_2461"
+"s",1877
+"server","https://prod-spellchain.herokuapp.com/"
+"server_version","0.25.2"
+"st1","v04"
+"storage:cards",24
+"storage:full_pct",80
+"storage:max_units",30
+"username",1877
+"version","1.23.1-201308201327"
+"wallet:E001",0.00
+"wallet:ENRG",20.00
+"wallet:FRND",190.00
+"wallet:HARD",4831.00
+"wallet:SOFT",263330.00
+"wallet:USD_",30.01
+"wallet:XPXP",240.00

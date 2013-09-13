@@ -82,10 +82,12 @@ object ParseJson {
 	def main(args: Array[String]) {
 //		val fname = "/Users/bvartanian/Development/wbi/challenge-analysis/data/raw/with-json-r.csv"
 		val fname = "/Users/bvartanian/Development/wbi/challenge-analysis/sql/sample-data.csv"
+		val path = "/Users/bvartanian/Development/klab/spellchain-analysis/data/raw/2013-09-03-review-data/"
+		val fname2 = "quest-win-loss-v-qid_20130829_1737.csv"
 		val file = new File(fname)
 		val parent = file.getParentFile
 		val filename = file.getName
 
-		examineEvtJson(fname)
+		examineEvtJson(path + fname2)
 	}
 }
