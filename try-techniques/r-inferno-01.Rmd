@@ -1,0 +1,62 @@
+R Inferno pdf
+========================================================
+
+From R_inferno.pdf
+
+Write a function for the quadratic formula
+```{r quadratic-formula}
+quadratic.formula <- function(a, b, c) {
+  rad <- b^2 - 4 * a * c
+  if(is.complex(rad) || all(rad >= 0)) {
+    rad <- sqrt(rad)
+  } else {
+    rad <- sqrt(as.complex(rad))
+  }
+  cbind(-b - rad, -b + rad) /(2 * a)
+}
+```
+```{r test-quad-formula}
+quadratic.formula(1, -5, 6) - c(2, 3)
+quadratic.formula(c(1, 3), c(-5, 4), 6)
+quadratic.formula(1/3, -5/3, 6/3)
+print(quadratic.formula(1/3, -5/3, 6/3), digits=16)
+```
+
+
+## Growing an object
+
+Use a reasonable upper bound
+```{r grow-in-chunks}
+n <- 3
+current.N <- 10 * n
+my.df <- data.frame(a=character(current.N), b=numeric(current.N), stringsAsFactors=FALSE)
+count <- 0
+for(i in 1:n) {
+  this.N <- rpois(1, 10)
+  print(paste('this.N=', this.N))
+  
+  # grow the data frame is needed
+  if (count + this.N > current.N) {
+    old.df <- my.df
+    current.N <- round(1.5 * (current.N + this.N))
+    my.df <- data.frame(a=character(current.N),
+                        b=numeric(current.N), stringsAsFactors=FALSE)
+    my.df[1:count, ] <- old.df[1:count, ]
+  } else {print('did not add rows')}
+  my.df[count + 1:this.N, ] <- data.frame(a=sample(letters, this.N, replace=TRUE),
+                                          b=runif(this.N), stringsAsFactors=FALSE)
+  count <- count + this.N
+}
+# get rid of empty rows
+my.df <- my.df[1:count, ]
+```
+
+Another way, build a bunch of pieces and then scrunch them together
+```{r build-a-bunch-of-pieces}
+  my.list <- vector('list', n)
+  for(i in 1:n) {
+    this.N <- rpois(1, 10)
+    my.list[[i]] <- data.frame(a=sample(letters, this.N, replace=TRUE), b=runif(this.N), stringsAsFactors=FALSE)
+  }
+  my.df <- do.call('rbind', my.list)
+```

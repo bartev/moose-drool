@@ -1,0 +1,165 @@
+Text Mine Complete Works of William Shakespeare
+========================================================
+
+http://www.r-bloggers.com/text-mining-the-complete-works-of-william-shakespeare/?utm_source=feedburner&utm_medium=email&utm_campaign=Feed%3A+RBloggers+%28R+bloggers%29
+
+## Load
+```{r load-file}
+textfile <- 'data/pg100.txt'
+if (!file.exists(textfile)) {
+  download.file('http://www.gutenberg.org/cache/epub/100/pg100.txt', destfile=textfile)
+}
+shakespeare=readLines(textfile)
+length(shakespeare)
+head(shakespeare)
+tail(shakespeare)
+```
+
+## Munge
+Remove metadata, and concatenate the rest into one long string
+```{r remove-metadata}
+shakespeare <- shakespeare[-(1:173)]
+shakespeare <- shakespeare[-(124195:length(shakespeare))]
+shakespeare <- paste(shakespeare, collapse=' ')
+nchar(shakespeare)
+```
+
+While I had the text open in the editor I noticed that sections in the document were separated by the following text:
+
+\<\<THIS ELECTRONIC VERSION OF THE COMPLETE WORKS OF WILLIAM
+SHAKESPEARE IS COPYRIGHT 1990-1993 BY WORLD LIBRARY, INC., AND IS
+PROVIDED BY PROJECT GUTENBERG ETEXT OF ILLINOIS BENEDICTINE COLLEGE
+WITH PERMISSION.  ELECTRONIC AND MACHINE READABLE COPIES MAY BE
+DISTRIBUTED SO LONG AS SUCH COPIES (1) ARE FOR YOUR OR OTHERS
+PERSONAL USE ONLY, AND (2) ARE NOT DISTRIBUTED OR USED
+COMMERCIALLY.  PROHIBITED COMMERCIAL DISTRIBUTION INCLUDES BY ANY
+SERVICE THAT CHARGES FOR DOWNLOAD TIME OR FOR MEMBERSHIP.\>\>
+
+Obviously that is going to taint the analysis. But it also serves as a convenient marker to divide that long, long, long string into separate documents.
+
+```{r split-on-marker-text}
+# strsplit returns a list
+# Take the first element (in this case there is only 1 element)
+shakespeare <- strsplit(shakespeare, "<<[^>]*>>")[[1]]
+length(shakespeare)
+# Now, we have a 2nd list of 218 elements
+```
+
+This left me with a list of 218 documents. On further inspection, some of them appeared to be a little on the short side (in my limited experience, the bard is not known for brevity). As it turns out, the short documents were the dramatis personae for his plays. I removed them as well.
+```{r remove-dramatis-personae}
+(dramatis.personae <- grep('Dramatis Personae', shakespeare, ignore.case=TRUE))
+length(shakespeare)
+shakespeare <- shakespeare[-dramatis.personae]
+length(shakespeare)
+```
+
+Down to 182 documents, each of which is a complete work.
+
+The next task was to convert these documents into a corpus.
+```{r}
+# install.packages('tm')
+library(tm)
+
+doc.vec <- VectorSource(shakespeare)
+doc.corpus <- Corpus(doc.vec)
+summary(doc.corpus)
+```
+
+There is a lot of information in those documents which is not particularly useful for text mining. So before proceeding any further, we will clean things up a bit. First we convert all of the text to lowercase and then remove punctuation, numbers and common English stopwords. Possibly the list of English stop words is not entirely appropriate for Shakespearean English, but it is a reasonable starting point.
+
+```{r clean-up-corpus}
+doc.corpus <- tm_map(doc.corpus, tolower)
+doc.corpus <- tm_map(doc.corpus, removePunctuation)
+doc.corpus <- tm_map(doc.corpus, removeNumbers)
+doc.corpus <- tm_map(doc.corpus, removeWords, stopwords('english'))
+
+# Next we perform stemming, which removes affixes from words (so, for example, “run”, “runs” and “running” all become “run”).
+# install.packages('SnowballC')
+library(SnowballC)
+doc.corpus <- tm_map(doc.corpus, stemDocument)
+doc.corpus <- tm_map(doc.corpus, stripWhitespace)
+
+inspect(doc.corpus[8])
+```
+
+## TDM/DTM
+
+This is where things start to get interesting. Next we create a Term Document Matrix (TDM) which reflects the number of times each word in the corpus is found in each of the documents.
+```{r term-document-matrix}
+tdm <- TermDocumentMatrix(doc.corpus)
+tdm
+inspect(tdm[1:10, 1:10])
+```
+Document Term Matrix (transpose of TDM?)
+```{r document-term-matrix}
+dtm <- DocumentTermMatrix(doc.corpus)
+inspect(dtm[1:10,1:10])
+```
+Which of these proves to be most convenient will depend on the relative number of documents and terms in your data.
+
+
+
+## Now start asking questions
+
+Now we can start asking questions like: what are the most frequently occurring terms?
+```{r find-freq}
+findFreqTerms(tdm, 2000)
+```
+
+What about associations between words? Let’s have a look at what other words had a high association with “love”.
+```{r find-assoc}
+findAssocs(tdm, 'love', 0.8)
+```
+
+From our first look at the TDM we know that there are many terms which do not occur very often. It might make sense to simply remove these sparse terms from the analysis.
+```{r remove-uncommon-words}
+tdm.common <- removeSparseTerms(tdm, 0.1)
+dim(tdm)
+dim(tdm.common)
+```
+
+From the 18651 terms that we started with, we are now left with a TDM which considers on 71 commonly occurring terms.
+```{r look-at-common-terms}
+inspect(tdm.common[1:10, 1:10])
+```
+
+Finally we are going to put together a visualisation. The TDM is stored as a sparse matrix. This was an apt representation for the initial TDM, but the reduced TDM containing only frequently occurring words is probably better stored as a normal matrix. We’ll make the conversion and see.
+```{r change-shape-slam}
+library(slam)
+tdm.dense <- as.matrix(tdm.common)
+object.size(tdm.common)
+object.size(tdm.dense)
+```
+
+So, as it turns out the sparse representation was actually wasting space! (This will generally not be true though: it will only apply for a matrix consisting of just the common terms). Anyway, we need the data as a normal matrix in order to produce the visualisation. The next step is to convert it into a tidy format.
+```{r convert-to-tidy}
+library(reshape2)
+tdm.dense <- melt(tdm.dense, value.name='count')
+tdm.d <- melt(tdm.dense)
+head(tdm.dense)
+```
+
+## Visualize
+```{r visualize}
+library(ggplot2)
+ggplot(tdm.dense, aes(x=Docs, y=Terms, fill=log10(count))) +
+  geom_tile(colour='white') +
+  scale_fill_gradient(high='#FF0000', low='#FFFFFF') +
+  ylab('') +
+  theme(panel.background = element_blank()) +
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
+```
+The colour scale indicates the number of times that each of the terms cropped up in each of the documents. I applied a logarithmic transform to the counts since there was a very large disparity in the numbers across terms and documents. The grey tiles correspond to terms which are not found in the corresponding document.
+
+One can see that some terms, like “will” turn up frequently in most documents, while “love” is common in some and rare or absent in others.
+
+That was interesting. Not sure that I would like to make any conclusions on the basis of the results above (Shakespeare is well outside my field of expertise!), but I now have a pretty good handle on how the tm package works. As always, feedback will be appreciated!
+
+## References
+
+    Build a search engine in 20 minutes or less
+    Feinerer, I. (2013). Introduction to the tm Package: Text Mining in R.
+    Feinerer, I., Hornik, K., & Meyer, D. (2008). Text Mining Infrastructure in R. Journal of Statistical Software, 25(5).
+
+
+
