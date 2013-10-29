@@ -21,12 +21,12 @@ head(df)
 
 ```
 ##   Butterfinger Snickers   Skor AlmondJoy
-## 1        13.90    71.99 126.29     39.23
-## 2        25.89    78.54 125.57     48.78
-## 3        26.29    55.22 191.61     47.36
-## 4        34.08    87.56  96.62     49.87
-## 5        22.53    81.13 111.82     43.15
-## 6        19.64    75.92 174.49     46.14
+## 1        20.01    92.92 211.26     47.57
+## 2        20.95    78.56 136.01     45.09
+## 3         7.72    52.86  80.21     47.43
+## 4        30.46    58.31 175.03     47.27
+## 5        37.40    70.88 122.27     47.39
+## 6        30.46    58.92  81.33     38.58
 ```
 
 ```r
@@ -39,17 +39,37 @@ df.melt <- melt(df)
 ```
 
 ```r
+ggplot(df.melt, aes(x = variable, y = value)) + geom_boxplot()
+```
+
+![plot of chunk draw-boxplot](figure/draw-boxplot1.png) 
+
+```r
+
+# order once
+df.melt$variable <- factor(df.melt$variable, levels = c("Snickers", "Skor", 
+    "AlmondJoy", "Butterfinger"))
+ggplot(df.melt, aes(x = variable, y = value)) + geom_boxplot()
+```
+
+![plot of chunk draw-boxplot](figure/draw-boxplot2.png) 
+
+```r
+
+# order alphabetically
+df.melt$variable <- factor(df.melt$variable, levels = sort(levels(df.melt$variable)))
+
 head(df.melt)
 ```
 
 ```
 ##       variable value
-## 1 Butterfinger 13.90
-## 2 Butterfinger 25.89
-## 3 Butterfinger 26.29
-## 4 Butterfinger 34.08
-## 5 Butterfinger 22.53
-## 6 Butterfinger 19.64
+## 1 Butterfinger 20.01
+## 2 Butterfinger 20.95
+## 3 Butterfinger  7.72
+## 4 Butterfinger 30.46
+## 5 Butterfinger 37.40
+## 6 Butterfinger 30.46
 ```
 
 ```r
@@ -57,5 +77,5 @@ head(df.melt)
 ggplot(df.melt, aes(x = variable, y = value)) + geom_boxplot()
 ```
 
-![plot of chunk draw-boxplot](figure/draw-boxplot.png) 
+![plot of chunk draw-boxplot](figure/draw-boxplot3.png) 
 

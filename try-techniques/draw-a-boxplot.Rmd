@@ -13,6 +13,17 @@ df <- data.frame(Butterfinger = rnorm(50, 25, 10),
 head(df)
 
 df.melt <- melt(df)
+ggplot(df.melt, aes(x=variable, y=value)) + geom_boxplot()
+
+# order once
+df.melt$variable <- factor(df.melt$variable,
+                            levels=c('Snickers', 'Skor', 'AlmondJoy', 'Butterfinger'))
+ggplot(df.melt, aes(x=variable, y=value)) + geom_boxplot()
+
+# order alphabetically
+df.melt$variable <- factor(df.melt$variable,
+                            levels=sort(levels(df.melt$variable)))
+
 head(df.melt)
 
 ggplot(df.melt, aes(x=variable, y=value)) + geom_boxplot()

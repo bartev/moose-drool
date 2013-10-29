@@ -1,0 +1,210 @@
+From Cookbook for R - Colors(ggplot2)
+=============
+
+## Install libraries
+```{r libraries}
+library(ggplot2)
+library(RColorBrewer)
+```
+
+## Sample data
+```{r sample-data}
+df <- read.table(header=T, text='
+cond yval
+A 2
+B 2.5
+C 1.6
+')
+
+# Three variables
+df2 <- read.table(header=T, text='
+ cond1 cond2 yval
+    A      I 2
+    A      J 2.5
+    A      K 1.6
+    B      I 2.2
+    B      J 2.4
+    B      K 1.2
+    C      I 1.7
+    C      J 2.3
+    C      K 1.9
+')
+```
+
+
+## Simple color assignment
+```{r simple-color-assignment}
+# default
+ggplot(df, aes(x=cond, y=yval)) + geom_bar()
+# bars with red outlines
+ggplot(df, aes(x=cond, y=yval)) + geom_bar(colour='#FF9999')
+ggplot(df, aes(x=cond, y=yval)) + geom_bar(stat='identity', fill=rgb(1, 0, 0, .2))
+# red fill, black outlines
+ggplot(df, aes(x=cond, y=yval)) + geom_bar(fill='#FF9999', colour='black')
+
+# Standard black lines and points
+ggplot(df, aes(x=cond, y=yval)) + 
+  geom_line(aes(group=1)) + # group points otherwise no line will show
+  geom_point(size=3)
+
+# Dark blue lines, red dots
+ggplot(df, aes(x=cond, y=yval)) + 
+  geom_line(aes(group=1), colour='#000099') +
+  geom_point(size=3, colour='#cc0000')
+```
+
+## Map variable values to colors
+```{r map-variable-to-color}
+# bars: x and fill both depend on cond2
+ggplot(df, aes(x=cond, y=yval, fill=cond)) + geom_bar(stat='identity')
+
+# bars with other dataset, fill depends on cond2
+ggplot(df2, aes(x=cond1, y=yval)) +
+  geom_bar(aes(fill=cond2),
+           colour='black',
+           position=position_dodge())
+
+ggplot(df2, aes(x=cond1, y=yval, colour=cond2)) +
+  geom_line(aes(group=cond2)) +
+  geom_point(size=3)
+```
+
+## Colorblind-friendly palette
+Define your own palette for later use
+```{r colorblind-friendly-palette}
+# Can store palette to a variable then use it later - HOW?
+# The palette with grey:
+cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+# The palette with black:
+cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+# To use for fills, add
+scale_fill_manual(values=cbPalette)
+
+# To use for line and point colors, add
+scale_colour_manual(values=cbPalette)
+```
+
+## Color selection
+```{r color-selection}
+# equivalent - by default, scale_fill_hue() is used
+ggplot(df, aes(x=cond, y=yval, fill=cond)) + geom_bar(stat='identity')
+ggplot(df, aes(x=cond, y=yval, fill=cond)) + geom_bar(stat='identity') + scale_fill_hue()
+
+ggplot(df, aes(x=cond, y=yval, colour=cond)) + geom_point(size=8)
+ggplot(df, aes(x=cond, y=yval, colour=cond)) + geom_point(size=8) + scale_colour_hue()
+
+```
+
+## Change luminance and saturation (chromacity)
+```{r change-luminance-and-saturation}
+# Change luminance to 40 (instead of default 65)
+ggplot(df, aes(x=cond, y=yval, fill=cond)) + geom_bar(stat='identity') + scale_fill_hue()
+ggplot(df, aes(x=cond, y=yval, fill=cond)) + geom_bar(stat='identity') + scale_fill_hue(l=40)
+# Change luminance to 40, and reduce saturation (chromacity) from 100 to 50
+ggplot(df, aes(x=cond, y=yval, fill=cond)) + geom_bar(stat='identity') + scale_fill_hue()
+ggplot(df, aes(x=cond, y=yval, fill=cond)) + geom_bar(stat='identity') + scale_fill_hue(c=45)
+ggplot(df, aes(x=cond, y=yval, fill=cond)) + geom_bar(stat='identity') + scale_fill_hue(l=80, c=45)
+```
+
+## Using RColorBrewer
+```{r using-brewer}
+ggplot(df, aes(x=cond, y=yval, fill=cond)) + geom_bar(stat='identity') + scale_fill_brewer()
+ggplot(df, aes(x=cond, y=yval, fill=cond)) + geom_bar(stat='identity') + scale_fill_brewer(palette='Set1')
+ggplot(df, aes(x=cond, y=yval, fill=cond)) + geom_bar(stat='identity') + scale_fill_brewer(palette='Spectral')
+# Note: use scale_colour_brewer() for lines and points
+```
+
+## Manually define Palette
+Define your own set of colors with scale_fill_manual()
+```{r manually-defined-palette}
+ggplot(df, aes(x=cond, y=yval, fill=cond)) + geom_bar(stat='identity') + 
+  scale_fill_manual(values=c('red', 'blue', 'green'))
+ggplot(df, aes(x=cond, y=yval, fill=cond)) + geom_bar(stat='identity') + 
+  scale_fill_manual(values=c('#cc6666', '#9999cc', '#66cc99'))
+# Note: use scale_colour_manual() for lines and points
+```
+
+## Continuous colors
+```{r continuous-colors}
+set.seed(133)
+df2 <- data.frame(xval=rnorm(50), yval=rnorm(50))
+
+# make color depend on yval
+ggplot(df2, aes(x=xval, y=yval, colour=yval)) + geom_point()
+
+# use a different gradient
+ggplot(df2, aes(x=xval, y=yval, colour=yval)) + geom_point() + scale_colour_gradientn(colours=rainbow(2))
+ggplot(df2, aes(x=xval, y=yval, colour=yval)) + geom_point() + scale_colour_gradientn(colours=rainbow(4))
+ggplot(df2, aes(x=xval, y=yval, colour=yval)) + geom_point() + scale_colour_gradientn(colours=rainbow(10))
+```
+
+Qualitative Brewer Packages good for qualitative data
+
+Accent 8
+
+Dark2 8
+
+Paired 12
+
+Pastel1 9
+
+Pastel2 8
+
+Set1 9
+
+Set2 8
+
+Set3 12
+
+# Create a palette and display it
+```{r create-display-palette}
+pal <- brewer.pal(9, 'Greens')[c(3, 5, 7, 9)]
+pal <- c(pal, brewer.pal(9, 'Blues')[c(3, 5, 7, 9)])
+pal <- c(pal, brewer.pal(9, 'Reds')[c(3, 5, 7, 9)])
+pal <- c(pal, brewer.pal(9, 'Purples')[c(3, 5, 7, 9)])
+pal <- c(pal, brewer.pal(9, 'BrBG')[c(4, 3, 2, 1)])
+pal <- c(pal, brewer.pal(9, 'Greys')[c(5, 6, 7, 8)])
+image(1:30, 1, as.matrix(1:30), col=pal, xlab='Greens (sequential)', ylab='', xaxt='n', yaxt='n', bty='n')
+
+# display a divergent palette
+display.brewer.pal(7, 'BrBG')
+
+# display a qualitative palette
+display.brewer.pal(7, 'Accent')
+
+# Display n palettes simultaneously
+display.brewer.all(n=10, exact.n=FALSE)
+display.brewer.all(n=10)
+display.brewer.all()
+display.brewer.all(type='div')
+display.brewer.all(type='seq')
+display.brewer.all(type='qual')
+display.brewer.all(n=5, type='div', exact.n=TRUE)
+brewer.pal.info
+
+brewer.pal.info['Blues',]
+brewer.pal.info['Blues',]$maxcolors
+```
+
+## Create a combined palette?
+```{r create-combined-palette}
+pal <- c(brewer.pal(n=12, name='Paired'), brewer.pal(n=9, name='Pastel1'), brewer.pal(n=9, name='Set1'))
+pal <- unique(pal)
+pal
+```
+
+Quick and dirty colors
+```{r colors}
+# pal <- c(brewer.pal(n=12, name='Paired'), brewer.pal(n=9, name='Pastel1'), brewer.pal(n=9, name='Set1'))
+# pal <- unique(pal)
+# pal
+pal <- brewer.pal(9, 'Greens')[c(3, 5, 7, 9)]
+pal <- c(pal, brewer.pal(9, 'Blues')[c(3, 5, 7, 9)])
+pal <- c(pal, brewer.pal(9, 'Reds')[c(3, 5, 7, 9)])
+pal <- c(pal, brewer.pal(9, 'Purples')[c(3, 5, 7, 9)])
+pal <- c(pal, brewer.pal(9, 'BrBG')[c(4, 3, 2, 1)])
+pal <- c(pal, brewer.pal(9, 'Greys')[c(4, 6, 7, 8)])
+# image(1:length(pal), 1, as.matrix(1:length(pal)), col=pal, xlab='mypalette', ylab='', xaxt='n', yaxt='n', bty='n')
+```
