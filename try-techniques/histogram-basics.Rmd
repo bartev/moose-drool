@@ -1,0 +1,73 @@
+Basics of Histograms
+========================================================
+
+from: http://www.r-bloggers.com/basics-of-histograms/
+
+## Create data
+```{r create-data}
+set.seed(123)
+bmi <- rnorm(n=1000, m=24.2, sd=2.2)
+```
+
+## Basic histogram
+```{r basic-hist}
+hist(bmi)
+```
+
+## What info does hist() give?
+```{r hist-info}
+histinfo <- hist(bmi)
+histinfo
+```
+
+## Change number of bins
+```{r change-num-bins}
+hist(bmi, breaks=20, main='Breaks=20')
+hist(bmi, breaks=5, main='Breaks=5')
+```
+
+## Breakpoints from vector
+breaks are *start* and *end* of each bin.
+
+Breaks are right closed (a, b]
+
+Change this with right=FALSE to be [a, b)
+```{r breaks-vector}
+hist(bmi, breaks=c(17, 20, 23, 26, 29, 32), main='Breaks is a vector of breakpoints')
+```
+
+## Density plot
+```{r density-plot}
+hist(bmi, freq=FALSE, main='Density')
+```
+
+## Look at output
+use plot=FALSE to just get output, no plot
+```{r hist-output}
+hist1 <- hist(bmi, plot=FALSE)
+hist1$density
+```
+
+## density with bins of size != 1
+```{r density-odd-size-bins}
+hist2 <- hist(bmi, plot=FALSE, breaks=c(17, 25, 26, 32 ))
+hist3 <- hist(bmi, breaks=c(17, 25, 26, 32 ))
+sum(hist2$density)
+diff(hist2$breaks)
+sum(diff(hist2$breaks) * hist2$density)
+```
+
+## Plot aesthetics
+```{r aesthetics}
+hist3 <- hist(bmi, 
+     freq=FALSE, 
+     xlab='Body Mass Index',
+     main='Distribution of Body Mass Index',
+     col='lightgreen',
+     xlim=c(15, 35),
+     ylim=c(0, 0.2))
+
+# Add a normal distribution curve using curve()
+curve(dnorm(x, mean=mean(bmi), sd=sd(bmi)), add=TRUE, col='darkblue', lwd=2)
+
+```
