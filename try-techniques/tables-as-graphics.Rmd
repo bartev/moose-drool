@@ -1,0 +1,38 @@
+Tables as graphics
+========================================================
+
+## Load libraries & data
+```{r load-data-libraries}
+library(OIdata)
+data(birds)
+library(ggplot2)
+library(gridExtra)
+```
+
+## Some munging
+```{r some-munging}
+head(birds)
+str(birds)
+
+# line breaks between words for levels of birds$effects
+levels(birds$effect) <- gsub(' ', '\n', levels(birds$effect))
+```
+
+Make table
+```{r make-table}
+xyTable <- table(birds$sky, birds$effect)
+xyTable
+```
+
+Use qplot to create empty plt, center table in it, use tableGrob to display the table
+```{r display-table}
+qplot(1:10, 1:10, geom='blank') + theme_bw() +
+  theme(line = element_blank(), text=element_blank()) +
+  annotation_custom(grob = tableGrob(xyTable,
+      # change font sizes:
+      gpar.coltext = gpar(cex=1.2),
+      gpar.rowtext = gpar(cex=1.2)),
+      xmin=-Inf, xmax= Inf, ymin= -Inf, ymax= Inf)
+```
+
+
