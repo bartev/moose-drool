@@ -1,0 +1,61 @@
+2 ways of plotting empirical cdf distibution functions
+========================================================
+
+http://chemicalstatistician.wordpress.com/2013/06/25/exploratory-data-analysis-2-ways-of-plotting-empirical-cumulative-distribution-functions-in-r/
+
+Use the ozone data set
+
+## get data and calculate key summary statistics
+
+How many non-missing rows are there?
+```{r count-non-missing-values}
+# extract 'Ozone' data vector for New York
+ozone <- airquality$Ozone
+# how many non-missing values?
+n <- sum(!is.na(ozone))
+```
+
+Use ecdf() to obtain empirical cdf values
+```{r get-ecdf}
+ozone.ecdf <- ecdf(ozone)
+ozone.ecdf
+```
+
+Use plot() to plot ecdf
+```{r plot-ecdf-2}
+plot(ozone.ecdf, xlab = 'Sample Quantiles of Ozone', ylab = '', main = 'Empirical Cumluative Distribution\nOzone Pollution in New York')
+mtext(text = expression(hat(F)[n](x)), side = 2, line = 2.5)
+# plot.ecdf(ozone)
+```
+
+## Method 2
+
+* calculate cumulative probabilities
+* order the data
+* plort the cumulative probabilities against the ordered data
+```{r method-2}
+summary(fivenum(ozone))
+fivenum(ozone)
+
+# ordering the ozone data
+ozone.ordered <- sort(ozone)
+```
+
+```{r plot-method-2}
+# plot the possible values of probability (0 to 1) against the ordered ozone data (sample quantiles of ozone)
+# notice the option type = 's' for plotting the step functions
+plot(ozone.ordered, (1:n)/n, type = 's', ylim = c(0, 1), xlab = 'Sample Quantiles of Ozone', ylab = '', main = 'Empirical Cumluative Distribution\nOzone Pollution in New York')
+
+# x values = ozone.ordered
+# y values = (1:n)/n
+
+# mark the 3rd quartile
+abline(v=62.5, h=0.75)
+
+# add a legend
+legend(65, 0.7, '3rd Quartile = 63.5', box.lwd=0)
+
+# add the label on the y-axis
+mtext(text = expression(hat(F)[n](x)), side = 2, line = 2.5)
+
+```
