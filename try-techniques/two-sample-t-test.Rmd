@@ -1,0 +1,33 @@
+Argon - t-test
+========================================================
+
+http://chemicalstatistician.wordpress.com/2013/03/10/discovering-argon-with-the-2-sample-t-test/
+
+##### Analyzing Lord Rayleigh's Data on Nitrogen and Discovering Argon with the 2-Sample t-Test
+##### Written by Eric Cai - The Chemical Statistician
+
+```{r define-argo-data}
+
+
+atmospheric.nitrogen = c(2.31017, 2.30986, 2.31010, 2.31001, 2.31024, 2.31010, 2.31028, NA)
+chemical.nitrogen = c(2.30143, 2.29890, 2.29816, 2.30182, 2.29869, 2.29940, 2.29849, 2.29869)
+nitrogen.masses = data.frame(atmospheric.nitrogen, chemical.nitrogen)
+colnames(nitrogen.masses) = c('Nitrogen from Air', 'Nitrogen from Chemical Decomposition')
+```
+
+
+```{r nitrogen-box-plot}
+boxplot(nitrogen.masses, main = "Lord Rayleigh''s Measured Masses of Nitrogen", ylab = 'Mass (g)')
+
+```
+
+## Do a 2 sample t-test
+* Null Hypothesis: There is no difference between the masses of the 2 types of nitrogen.
+* Alternative Hypothesis: There is a difference between the masses of the 2 types of nitrogen.
+```{r two-sample-t-test-argon}
+t.test(atmospheric.nitrogen, chemical.nitrogen)
+```
+
+Interpretation
+* Low p-value indicates less evidence for null hypothesis
+* p-value < 0.05, so reject null hypothesis - so, 2 samples of nitrogen are different!
