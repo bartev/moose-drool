@@ -1,0 +1,65 @@
+Data Prep
+========================================================
+
+From http://www.r-bloggers.com/data-preparation-part-i/?utm_source=feedburner&utm_medium=email&utm_campaign=Feed%3A+RBloggers+%28R+bloggers%29
+
+## Using apply, lapply, tapply
+```{r using-apply}
+set.seed(123)
+matriz <- matrix(round(runif(12, 1, 10), 0), nrow=3)
+```
+
+apply(X, MARGIN, FUN, ...)
+MARGIN = 1 = row
+MARGIN = 2 = column
+MARGIN = c(1, 2) = rows and columns
+
+```{r apply-2}
+matriz
+apply(matriz, 1, sum)  # Sum by row
+apply(matriz, 2, sum)  # Sum by column
+apply(matriz, c(1, 2), function(x) x^2)  # square everything
+```
+
+## tapply - useful on descriptive analysis
+tapply(X, INDEX, FUN = NULL, ..., simplify = TRUE)
+INDEX = list of one or more factors
+```{r tapply-mtcars}
+head(mtcars)
+str(mtcars)
+# mean power by cylinder capacity
+tapply(mtcars$hp, mtcars$cyl, mean)
+```
+
+If you have a list, can use lapply or sapply (simplify the output)
+```{r lapply-sapply}
+# Generate data
+lista <- list(a=c('one', 'tow', 'three'), b=c(1,2,3), c=c(12, 'a')) 
+lista
+
+# How many elements in each list?
+lapply(lista, length)  # return a list
+sapply(lista, length)  # return a vector
+```
+
+## Split - apply - combine without plyr
+Use split, *apply, rbind/cbind
+
+### Split
+```{r split}
+data <- split(mtcars, mtcars$gear)  # split
+data
+```
+
+### Apply
+```{r apply}
+fits <- lapply(data, function(x) return(lm(x$mpg ~ x$disp)$coef))
+fits
+```
+
+### Combine
+```{r combine}
+do.call(rbind, fits)
+```
+
+

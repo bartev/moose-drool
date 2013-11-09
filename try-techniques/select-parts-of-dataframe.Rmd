@@ -1,0 +1,47 @@
+Select operations on R
+========================================================
+
+From http://www.r-bloggers.com/select-operations-on-r-data-frames/
+
+```{r create-data}
+set.seed(123)
+# round(runif(12,1,10))
+
+# bmi <- rnorm(n=1000, m=24.2, sd=2.2)
+
+df <- data.frame(Butterfinger = rnorm(25, 25, 10),
+  Snickers = rnorm(25, 75, 20),
+  Skor = rnorm(25, 115, 35),
+  AlmondJoy = rnorm(25, 45, 5))
+```
+
+Get shape of data frame
+```{r get-shape}
+dim(df)
+```
+
+Select columns by name
+```{r select-columns-by-name}
+df[, c('Snickers', 'Skor')]
+```
+
+Select by row names and column names
+```{r select-by-row-and-column-names}
+df[4:8, c('Snickers', 'Skor')]
+```
+
+Select rows by criteria (like sql where clause)
+```{r select-row-by-criteria}
+df[df$Skor > 150,]
+```
+
+Select using grep on row names
+```{r select-using-grep-on-row-names}
+mtcars[grep('Mazda', rownames(mtcars), ignore.case=T), ]
+```
+
+Every other row - is this the best way?
+```{r every-other-row}
+df[as.numeric(rownames(df)) %% 2 == 0,]
+df[as.numeric(rownames(df)) %% 2 == 0 & df$Skor > 150, grep('^[^AB]', colnames(df), ignore.case=T)]
+```

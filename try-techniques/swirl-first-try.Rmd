@@ -1,0 +1,13 @@
+Swirl - first try
+========================================================
+
+```{r install-libraries}
+library(devtools)
+install_github(repo='swirl', username='ncarchedi')
+```
+
+```{r start-using}
+library('swirl')
+swirl()
+```
+
