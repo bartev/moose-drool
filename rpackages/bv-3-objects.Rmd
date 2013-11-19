@@ -1,0 +1,146 @@
+Objects - Hadley master class
+
+========================================================
+
+## Motivation
+```{r motivation-1}
+mean(1:10)
+mean(mtcars)
+# What does mean do?
+mean
+```
+
+```{r look-at-sd}
+sd <- function (x, na.rm = FALSE) {
+    if (is.matrix(x))
+        apply(x, 2, sd, na.rm = na.rm)
+    else if (is.vector(x))
+        sqrt(var(x, na.rm = na.rm))
+    else if (is.data.frame(x))
+        sapply(x, sd, na.rm = na.rm)
+    else sqrt(var(as.vector(x), na.rm = na.rm))
+}
+```
+
+## S3
+```{r create-a-class-structure}
+# Structure function takes vector and adds attributes
+# class attribute determines S3 class
+structure(1:10, min = 0, max = 10,
+  class = "minmax")
+# Customary to create convenience function to create
+# objects of specific class
+minmax <- function(x, minx = min(x), maxx = max(x)) {
+  stopifnot(is.numeric(x))
+  structure(x, min = minx, max = maxx,
+    class = "minmax")
+}
+minmax(1:10)
+```
+
+```{r create-a-test-for-class}
+# Also customary to create function to test if
+# an object is of that class:
+is.minmax <- function(x) {
+  inherits(x, "minmax")
+}
+is.minmax(minmax(1:10))
+```
+
+```{r create-structure-print-method}
+# First method is usually a print method. Always
+# look at the generic first so that you can match
+# the arguments correctly.
+print
+# Can tell it's a generic method because it uses
+# UseMethod
+# Methods follow simple naming scheme
+print.minmax <- function(x, ...) {
+  print.default(as.numeric(x))
+  cat("Range: [", attr(x, "min"), ", ",
+    attr(x, "max"), "]\n", sep = "")
+}
+minmax(1:10)
+# Only time it's ok to call a method directly
+```
+
+## Methods are associated with functions, not classes
+No check for object correctness
+```{r no-check-for-correctness}
+# No checks for object correctness, so easy to abuse
+mod <- glm(log(mpg) ~ log(disp), data = mtcars)
+class(mod)
+class(mod) <- "lm"
+mod
+class(mod) <- "table"
+mod
+# But surprisingly, this doesn't cause that
+# many problems - instead of the language enforcing
+# certain properties you need to do it yourself
+```
+
+Try to break minmax
+```{r break-minmax}
+minmax <- function(x, minx = min(x), maxx = max(x)) {
+  stopifnot(is.numeric(x))
+  stopifnot(all(minx <= x))
+  stopifnot(all(maxx >= x))
+  structure(x, min = minx, max = maxx,
+    class = "minmax")
+}
+minmax(1:10, max = 5)
+```
+
+```{r other}
+max.minmax <- function(..., na.rm=FALSE) {
+  parts <- list(...)
+  if (length(parts) == 1) {
+    attr(parts[[1]], 'max')
+    } else {
+      stop ('Maximum of more than one minmax not implemented')
+    }
+}
+max(a)
+```
+ Add method for min
+ 
+```{r add-method-for-min}
+max.minmax <- function(..., na.rm=FALSE) {
+  parts <- list(...)
+  if (length(parts) == 1) {
+    attr(parts[[1]], 'max')
+  } else {
+    max(vapply(parts, 'min', numeric(1)))
+  }
+}
+min.minmax <- function(..., na.rm=FALSE) {
+  parts <- list(...)
+  if (length(parts) == 1) {
+    attr(parts[[1]], 'min')
+  } else {
+    max(vapply(parts, 'min', numeric(1)))
+  }
+}
+range.minmax <- function(..., na.rm = FALSE) {
+  c(min(..., na.rm=TRUE), max(..., na.rm=TRUE))
+}
+```
+
+```{r test-min}
+a <- minmax(1:10, max=20)
+str(a)
+attributes(a)
+a[1:5]
+
+match.fun('[')
+'[.minmax' <- function(x, ...) {
+  minmax(NextMethod(), minx=attr(x, 'min'),
+         maxx=atr(x, 'max'))
+}
+min(a)
+max(a)
+
+min.minmax
+attributes(minmax)
+str(minmax)
+```
