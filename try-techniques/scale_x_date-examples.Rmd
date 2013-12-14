@@ -1,0 +1,54 @@
+scale_x_date example
+========================================================
+
+http://docs.ggplot2.org/0.9.3.1/scale_date.html
+
+```{r create-data}
+df <- data.frame(
+  date = seq(Sys.Date(), len=100, by='1 day')[sample(100, 50)],
+  price = runif(50)
+  )
+df <- df[order(df$date),]
+dt <- ggplot(df, aes(date, price)) + geom_line(aes(group=1)) + theme(aspect.ratio= 1/4)
+```
+
+To access breaks/formatting functions, use library(scales)
+```{r add-scales}
+library(scales)
+dt + scale_x_date()
+```
+
+Change label format
+```{r format-labels}
+dt + scale_x_date(labels=date_format('%m/%d'))
+```
+
+Another label format
+```{r format-labels-week}
+dt + scale_x_date(labels=date_format('%W'))
+```
+
+Break on weeks
+```{r format-labels-break-weeks}
+dt + scale_x_date(labels=date_format('%W'), breaks=date_breaks('week'))
+```
+
+Break on months
+```{r format-labels-break-months}
+dt + scale_x_date(labels=date_format('%b'), breaks=date_breaks('months'))
+```
+
+Break on 4 weeks
+```{r format-labels-break-4-weeks}
+dt + scale_x_date(labels=date_format('%d-%b'), breaks=date_breaks('4 weeks'))
+```
+
+Text for labels
+```{r text-for-labels}
+dt + scale_x_date(breaks='2 weeks')
+```
+
+Set major & minor breaks
+```{r set-major-minor-breaks}
+dt + scale_x_date(breaks='1 month', minor_breaks='1 week')
+```
