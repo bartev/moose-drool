@@ -1,0 +1,34 @@
+Draw a time series plot with colored vertical areas
+
+From:
+https://groups.google.com/forum/#!msg/ggplot2/lbExU4JkAas/R-qmq2CeGigJ
+
+# Example using unemployment data from the economics data frame 
+# and the presidential data frame in the ggplot2 package 
+
+library(ggplot2) 
+
+# Monthly time series plot of unemployment rate 
+ggplot(economics, aes(x = date, y = unemploy)) + 
+  geom_line() + 
+  labs(x = "", y = "No. unemployed (1000s)") 
+
+# Data on presidential terms over this time span 
+presterms <- presidential[-(1:2), ] 
+
+# Generated data to use for labeling terms 
+presmidterm <- data.frame(name = presterms$name, midterm = 
+                            with(presterms, as.Date((as.numeric(start) + as.numeric(end))/2, 
+                                                    origin = "1970-01-01")), 
+                          stringsAsFactors = FALSE) 
+presmidterm$name[1] <- "Johnson" 
+
+ggplot() + 
+  theme_bw() + 
+  geom_rect(data = presterms, aes(xmin = start, xmax = end, 
+                                  ymin = -Inf, ymax = Inf, fill = party), alpha = 0.3) + 
+  geom_line(data = economics, aes(x = date, y = unemploy)) + 
+  labs(x = "", y = "No. unemployed (1000s)") + 
+  geom_text(data = presmidterm, aes(x = midterm, y = 2500, label = name), 
+            size = 3) + 
+  scale_fill_manual(values = c("blue", "red")) 
