@@ -1,0 +1,58 @@
+Main Rmd
+========================================================
+
+Run something here
+```{r run-everything}
+# getwd()
+# opts_chunk$get('root.dir')
+# opts_knit$get('root.dir')
+
+# opts_chunk$set(root.dir='../..')
+# Set root directory when knitting
+opts_knit$set(root.dir='../..')
+
+opts_chunk$set(aliases=c(h='fig.height', w='fig.width', oh='out.height', ow='out.width', cap='fig.cap', scap='fig.scap'), eval.after = c('fig.cap','fig.scap'))
+opts_chunk$set(dev=c('png'), fig.path='graphics/', fig.keep='high', fig.align='center', comment=NA, tidy=TRUE)
+opts_chunk$set(oh=4, ow=6, h=4, w=8)
+
+options(replace.assign=TRUE, width=50)
+options(stringsAsFactors=FALSE, papersize='letter')
+# opts_knit$get('root.dir')
+# base(opts_knit$get('root.dir'))
+getwd()
+```
+
+---
+
+set global options
+```{r set-global-options}
+# wd <- getwd()
+opts_chunk$get('root.dir')
+# opts_chunk$set(root.dir=wd)
+# opts_chunk$get('root.dir')
+
+# load('r/raw/basic-r-script.R')
+source('r/raw/basic-r-script.R')
+
+system('ls')
+source('./r/raw/basic-r-script.R')
+ls()
+```
+
+--- 
+
+```{r plot-something, message=FALSE}
+x <- rnorm(2000)
+y <- x + rnorm(2000)
+df <- data.frame(x, y)
+ggplot(df, aes(x, y)) + geom_point() + geom_smooth()
+```
+
+---
+
+```{r, echo=FALSE}
+library(knitr)
+sessionInfo()
+```
+
+
