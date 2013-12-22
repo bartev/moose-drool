@@ -13,4 +13,5 @@ project/plugins/project/
 .scala_dependencies
 .Rproj.user
 
-pydata-book
+pydata-book/
+
