@@ -1,0 +1,97 @@
+Generaized Linear Models for Predicting Rates
+========================================================
+
+1/1/14
+http://www.r-bloggers.com/generalized-linear-models-for-predicting-rates/?utm_source=feedburner&utm_medium=email&utm_campaign=Feed%3A+RBloggers+%28R+bloggers%29
+
+For non-frequency (and non-categorical) rate problems (such as forecasting yield or purity) we suggest beta regression.
+
+* What's beta regression?
+
+In this note we will work a toy problem and suggest some relevant R analysis libraries.There are three primary settings for rate estimation problems:
+
+1. Each data row represents a single observation and y is a 0/1 variable, categorical or logical. In this case we come to rates by asking for a probability forecast of how likely a given row has y=1.
+2. Each data row represents many observations and y is a frequency between 0 and 1. In this case we need an additional weight to represent how many observations each row represents (so we can pass this detail on to various fitters). This representation is just a different encoding of the first setting.
+3. Each data row represents a single observation and y is an observed quantity between 0 and 1. We think of y in this case as being a non-frequency rate (since each row represents a single event) and examples include y’s that measure purity, fullness, or yield.
+
+To get away from online advertising for a moment consider the following (artificial) problem: predicting y as a function of x1 and x2 for the following data.
+
+```{r set-up-data}
+ d <- data.frame(
+     y= c(       1,    1, 1, 0,    0,    0),
+     x1=c(-1000000,20000,-1, 2,10000,10000),
+     x2=c( 1000000,30000, 0, 1, 1000, 1000))
+```
+
+This problem is just an encoding of the law x1 < x2, but because the relative magnitudes of x1 and x2 are varying so much a linear regression can not pick up the relation:
+
+```{r try-lm}
+mod  <-  lm(y ~ x1 + x2, data = d)
+mod
+predict(mod)
+```
+
+Notice how the predictions don’t have a cut-point separating “y” (items 1,2,3) from “n” (items 4,5,6). This is despite the fact that the linear form x2-x1 is a perfect decision surface. The issue is linear regression is looking for a scoring function (not a decision surface) and is punished if it predicts out of the (0,1) range. If the answer is “1″ and the linear model predicts “5″ this counts as a lot of error. So a lot of the power of the linear model is wasted trying to push values back into the range 0 to 1.
+
+```{r try-log-reg}
+lr <- glm(y ~ x1 + x2, data = d, family=binomial(link='logit'))
+predict(lr, type='response')
+```
+
+Logistic regression = glm with logistic link
+
+__Logistic regression should always be considered when trying to estimate probabilities of frequencies.__
+
+It is an efficient method that tends to work well and has useful probabilistic derivations and interpretations. For estimating rates that don’t arise from category probabilities or frequencies you can still try logistic regression (and many other common generalized linear models), but we suggest also trying a method called beta regression. Beta regression allows the user to specify:
+
+1. One formula and link for the rate or mean estimate.
+2. One formula and link for a per-example error model.
+
+
+```{r use-beta-reg}
+install.packages('betareg')
+library(betareg)
+
+data('GasolineYield', package='betareg')
+set.seed(52352)
+dim(GasolineYield)
+head(GasolineYield)
+GasolineYield$rgroup <- sample(1:100, size=dim(GasolineYield)[[1]], replace=TRUE)
+GTrain <- subset(GasolineYield, GasolineYield$rgroup <= 50)
+GTest <- subset(GasolineYield, GasolineYield$rgroup > 50)
+
+gy <- betareg(yield ~ gravity + pressure + temp | gravity + pressure + temp, data=GTrain)
+
+print(summary(gy))
+
+GTest$model <- predict(gy, newdata=GTest)
+library(ggplot2)
+ggplot(data=GTest, aes(x=model, y=yield)) + geom_point() + geom_abline(slope=1)
+```
+
+This is a great fit (pseudo R-squared of 0.93). Though we really didn’t see any improvement over what lm() would have delivered (which itself has an R-squared of 0.97). Also notice we get properly bounded predictions, even without specifying a non-identity link. But we do have access to the argument sensitive error model which lets the following code produce our next figure: predictions with uncertainty ranges.
+
+```{r add-errors}
+GTest$modelErr <- sqrt(predict(gy, newdata=GTest, type='variance'))
+ggplot(data=GTest, aes(x=model, y=yield)) + geom_point() + geom_errorbarh(aes(xmin=model - modelErr, xmax=model + modelErr)) + geom_abline(slope=1)
+```
+
+This is pretty useful in practice.
+
+So far we have been using beta regression on data where each row is a single measurement carrying a rate (not a frequency or fraction of success, but per-row measurement like how pure a product is). We could also attempt to use beta regression for data where each row is a single example that is a success or failure and we are trying to estimate rates (as we did using glm()). The first issue is to even attempt this we must first make sure our y’s are in the open interval (0,1). One such way to do this is as follows:
+
+```{r}
+d
+d$yCollared <- pmin(pmax(1/dim(d)[[1]], d$y), 1 - 1/dim(d)[[1]])
+d
+
+bm <- betareg(yCollared ~ x1 + x2, data=d, link='logit')
+predict(bm, newdata=d, type='response')
+```
+
+And we seem to get a poor result very similar to linear regression (not separating the training examples, but at least all in the range (0,1)). Frankly the package seems to not be very sensitive to my attempts to set link and/or link.phi for this example. That is a hint we are not using the method as intended. 
+
+__The observation is: you want to try beta regression when you are estimating non-frequency rates and not when estimating probabilities or frequencies.__
+
+
+
