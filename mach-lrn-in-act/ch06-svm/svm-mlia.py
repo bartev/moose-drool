@@ -38,20 +38,23 @@ def smoSimple(dataMatIn, classLabels, C, toler, maxIter):
 		alphaPairsChanged = 0
 		for i in range(m):
 			# fXi = Prediction of class
+			# np.multiply(alphas, labelMat) does element-wise multiplication resulting in alpha(i) * y(i) terms and a (1 x m) matrix (after the transform)
+			# (dataMatrix * dataMatrix[i,:].T) is the inner product of all the rows of x with the ith row. It is a (m x 1) matrix
+			# Multiplying these 2, gives the sum(i=1 to m) [ alpha(i) y(i) <x(i), x>], the main term in calculating the predicted class.
 			fXi = float(np.multiply(alphas, labelMat).T * (dataMatrix * dataMatrix[i, :].T)) + b
 			# Ei = error based on prediction
 			Ei = fXi - float(labelMat[i])
 			#  If error is large, then alpha can be optimized
-			if ((labelMat[i] * Ei < toler) and (alphas[i] < C)) or \
+			if ((labelMat[i] * Ei < -toler) and (alphas[i] < C)) or \
 				((labelMat[i] * Ei > toler) and (alphas[i] > 0)):
 				# Enter optimiztion if alphas can be changed
 				# Randomly select 2nd alpha
 				j = selectJrand(i, m)
-				# fXj = prediction of class
+				# fXj = prediction of class for 2nd alpha
 				fXj = float(np.multiply(alphas, labelMat).T * (dataMatrix * dataMatrix[j, :].T)) + b
 				# Ej = error for 2nd alpha
 				Ej = fXj - float(labelMat[j])
-				alphaIold = alphas[i].copy()
+				alphaIold = alphas[i].copy()  # copy so we don't mess with original
 				alphaJold = alphas[j].copy()
 				#  Guarantee alpha stays between 0 and C
 				if(labelMat[i] != labelMat[j]):
@@ -78,6 +81,7 @@ def smoSimple(dataMatIn, classLabels, C, toler, maxIter):
 				if (abs(alphas[j] - alphaJold) < 0.00001):
 					print "j not moving enough"
 					continue
+				# update i by same amount as j in opposite directin
 				# Change alpha[i] by opposite sign
 				alphas[i] += labelMat[j] * labelMat[i] * (alphaJold - alphas[j])
 				# Set constant term after adjusting alphas
@@ -106,6 +110,56 @@ def smoSimple(dataMatIn, classLabels, C, toler, maxIter):
 		print "iteration number: %d" % iter
 	return b, alphas
 	
+class optStruct:
+	""" data structure to hold all important values """
+	def __init__(self, dataMatIn, classLabels, C, toler):
+		self.X = dataMatIn
+		self.labelMat = classLabels
+		self.C = C
+		self.tol = toler
+		self.m = np.shape(dataMatIn)[0]
+		self.alphas = np.mat(np.zeros((self.m, 1)))
+		self.b = 0
+		# Error cache m x 2 matrix
+		# col 1 = flag bit - is eCache valid?
+		# col 2 = E value
+		self.eCache = np.mat(np.zeros((self.m, 2)))
 
+def calcEk(oS, k):
+	""" calculate an E value for a given alpha. Before done inline, but in 
+		full Platt SMO, calculation is done more often, so pull it out 
+	"""
+	fXk = float( np.multiply(oS.alphas, oS.labelMat).T * (oS.X * oS.X[k, :].T)) + oS.b
+	Ek = fXk - float(oS.labelMat[k])
+	return Ek
+
+def selectJ(i, oS, Ei):
+	""" select second alpha (inner loop alpha from simple SMO)
+	"""
+	maxK = -1
+	maxDeltaE = 0
+	Ej = 0
+	oS.eCache[i] = [1, Ei]
+	validEcacheList = np.nonzero(oS.eCache[:, 0].A)[0]
+	if (len(validEcacheList)) > 1:
+		for k in validEcacheList:
+			if k == i:
+				continue
+			Ek = calcEk(oS, k)
+			deltaE = abs(Ei - Ek)
+			# Choose j for maximum step size
+			if (deltaE > maxDeltaE):
+				maxK = k
+				maxDeltaE = deltaE
+				Ej = Ek
+		return maxK, Ej
+	else:
+		j = selectJrand(i, oS.m)
+		Ej = calcEk(oS, j)
+	return j, Ej
+
+def updateEk(oS, k):
+	Ek = calcEk(oS, k)
+	oS.eCache[k] = [1, Ek]
 
 
