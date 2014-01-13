@@ -124,6 +124,34 @@ class optStruct:
 		# col 1 = flag bit - is eCache valid?
 		# col 2 = E value
 		self.eCache = np.mat(np.zeros((self.m, 2)))
+		# add for using kernel
+		self.K = np.mat(np.zeros((self.m, self.m)))
+		# linear in m!
+		# Calculated once.
+		# kTup is a tuple that containes information about the kernel
+		for i in range(self.m):
+			self.K[:, i] = kernelTrans(self.X, self.X[i, :], kTup)
+
+def calcEkNoKernel(oS, k):
+	""" calculate an E value for a given alpha. 
+		Before done inline, but in full Platt SMO, 
+		calculation is done more often, so pull it out 
+	"""
+	"""
+		fXi = Prediction of class
+		np.multiply(alphas, labelMat) does element-wise 
+		multiplication resulting in alpha(i) * y(i) terms and 
+		a (1 x m) matrix (after the transform)
+		(dataMatrix * dataMatrix[i,:].T) is the inner product 
+		of all the rows of x with the ith row. 
+		It is a (m x 1) matrix
+		Multiplying these 2, gives the 
+		sum(i=1 to m) [ alpha(i) y(i) <x(i), x>], 
+		the main term in calculating the predicted class.
+	"""
+	fXk = float( np.multiply(oS.alphas, oS.labelMat).T * (oS.X * oS.X[k, :].T) + oS.b)
+	Ek = fXk - float(oS.labelMat[k])
+	return Ek
 
 def calcEk(oS, k):
 	""" calculate an E value for a given alpha. 
@@ -142,7 +170,9 @@ def calcEk(oS, k):
 		sum(i=1 to m) [ alpha(i) y(i) <x(i), x>], 
 		the main term in calculating the predicted class.
 	"""
-	fXk = float( np.multiply(oS.alphas, oS.labelMat).T * (oS.X * oS.X[k, :].T)) + oS.b
+	# Changed this line for kernel version
+	# fXk = float( np.multiply(oS.alphas, oS.labelMat).T * (oS.X * oS.X[k, :].T) + oS.b)
+	fXk = float( np.multiply(oS.alphas, oS.labelMat).T * oS.K[:, k] + oS.b)
 	Ek = fXk - float(oS.labelMat[k])
 	return Ek
 
@@ -176,7 +206,9 @@ def updateEk(oS, k):
 	Ek = calcEk(oS, k)
 	oS.eCache[k] = [1, Ek]
 
-def innerL(i, oS):
+def innerLnoKernel(i, oS):
+	""" original version - other version allows use of kernel
+	"""
 	Ei = calcEk(oS, i)
 	if ((oS.labelMat[i]*Ei < -oS.tol) and (oS.alphas[i] < oS.C)) or \
 		((oS.labelMat[i]*Ei < oS.tol) and (oS.alphas[i] > oS.C)):
@@ -215,6 +247,51 @@ def innerL(i, oS):
 		b2 = oS.b - Ej - \
 			oS.labelMat[i] * (oS.alphas[i] - alphaIold) * oS.X[i, :] * oS.X[j, :].T - \
 			oS.labelMat[j] * (oS.alphas[j] - alphaJold) * oS.X[j, :] * oS.X[j, :].T
+		if (0 < oS.alphas[i]) and (oS.C > oS.alphas[i]):
+			oS.b = b1
+		elif (0 < oS.alphas[j]) and (oS.C > oS.alphas[j]):
+			oS.b = b2
+		else:
+			oS.b = (b1 + b2)/2.0
+		return 1
+	else:
+		return 0
+
+def innerL(i, oS):
+	Ei = calcEk(oS, i)
+	if ((oS.labelMat[i]*Ei < -oS.tol) and (oS.alphas[i] < oS.C)) or \
+		((oS.labelMat[i]*Ei < oS.tol) and (oS.alphas[i] > oS.C)):
+		j, Ej = selectJ(i, oS, Ei)
+		alphaIold = oS.alphas[i].copy()
+		alphaJold = oS.alphas[j].copy()
+		if (oS.labelMat[i] != oS.labelMat[j]):
+			L = max(0, oS.alphas[j] - oS.alphas[i])
+			H = min(oS.C, oS.C + oS.alphas[j] - oS.alphas[i])
+		else:
+			L = max(0, oS.alphas[j] + oS.alphas[i] - oS.C)
+			H = min(oS.C, oS.alphas[j] + oS.alphas[i])
+		if L == H:
+			print "L == H"
+			return 0
+		# Change to use kernel
+		# eta = 2.0 * oS.X[i, :] * oS.X[j, :].T \
+		# 		- oS.X[i, :] * oS.X[i, :].T \
+		# 		- oS.X[j, :] * oS.X[j, :].T
+		eta = 2.0 * oS.K[i, j] - oS.K[i, i] - os.K[j, j]
+		if eta >= 0:
+			print "eta >= 0"
+			return 0
+		oS.alphas[j] -= oS.labelMat[j] * (Ei - Ej) / eta
+		oS.alphas[j] = clipAlpha(oS.alphas[j], H, L)
+		# update ecache (j)
+		updateEk(oS, j)
+		if (abs(oS.alphas[j] - alphaJold) < 0.00001):
+			print "j not moving enough"
+			return 0
+		oS.alphas[i] += oS.labelMat[j] * oS.labelMat[i] \
+			* (alphaJold - oS.alphas[j])
+		# update ecache (i)
+		updateEk(oS, i)			
 		if (0 < oS.alphas[i]) and (oS.C > oS.alphas[i]):
 			oS.b = b1
 		elif (0 < oS.alphas[j]) and (oS.C > oS.alphas[j]):
@@ -271,6 +348,30 @@ def calcWs(alphas, dataArr, classLabels):
 		# 	alpha(i) * y(i) * X(i).transpose
 		w += np.multiply(alphas[i] * labelMat[i], X[i, :].T)
 	return w
+
+def kernelTrans(X, A, kTup):
+""" kTup is a tuple that containes information about the kernel
+	kTup[0]: string describing what type of kernel
+	kTup[1...]: optional argument that may be needed
+"""
+	m, n = np.shape(X)
+	K = np.mat(np.zeros((m, 1)))
+	if kTup[0] == 'lin':
+		# linear kernel
+		# dot product between dataset and row of dataset
+		K = X * A.T
+	elif kTup[0] == 'rbf':
+		# radial basis function (Gaussian)
+		for j in range(m):
+			deltaRow = X[j, :] - A
+			K[j] = deltaRow * deltaRow.T
+		# element-wise division
+		K = exp(K / (-1 * kTup[1] ** 2))
+	# add additional kernel types here
+	# elif ... 
+	else:
+		raise NameError('Houston, we have a problem - that kernel is not recognized')
+	return K
 
 
 
