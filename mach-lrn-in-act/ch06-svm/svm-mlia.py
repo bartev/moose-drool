@@ -263,8 +263,29 @@ def smoP(dataMatIn, classLabels, C, toler, maxIter, kTup=('lin', 0)):
 def calcWs(alphas, dataArr, classLabels):
 	X = np.mat(dataArr)
 	labelMat = np.mat(classLabels).transpose()
-	m, n - shape(X)
+	m, n = np.shape(X)
 	w = np.zeros((n, 1))
 	for i in range(m):
+		# w.transpose = 
+		# sum over i
+		# 	alpha(i) * y(i) * X(i).transpose
 		w += np.multiply(alphas[i] * labelMat[i], X[i, :].T)
 	return w
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
