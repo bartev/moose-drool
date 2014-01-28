@@ -1,0 +1,35 @@
+K-means example
+========================================================
+
+```{r setup}
+require(graphics)
+library(ggplot2)
+# x is a matrix 
+x <- rbind(matrix(rnorm(100, sd=0.3), ncol=2),
+           matrix(rnorm(100, mean=1, sd = 0.2), ncol=2))
+colnames(x) <- c('x', 'y')
+
+(c1 <- kmeans(x, 2))
+```
+
+Plot it
+```{r plot-it}
+plot(x, col=c1$cluster)
+points(c1$centers, col=1:2, pch=8, cex=2)
+```
+
+```{r with-df}
+y <- as.data.frame(x)
+c2 <- kmeans(y, 2)
+mypoints <- as.data.frame(c2$centers)
+mypoints$col <- as.factor(1:2)
+
+ggplot(y, aes(x, y, color = as.factor(c2$cluster))) + geom_point() +
+  geom_point(data=mypoints, aes(x, y, color=col), size=10, alpha = 0.5) 
+```
+
+sum of squares
+```{r sos}
+ss <- function(x) sum(scale(x, scale = FALSE)^2)
+```
+
