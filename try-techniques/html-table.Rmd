@@ -1,0 +1,95 @@
+HTML tables
+========================================================
+
+Use melanoma data set in boot package
+
+http://gforge.se/2014/01/fast-track-publishing-using-knitr-part-iv/#regression
+```{r data-set-prep}
+library(boot)
+
+head(melanoma)
+summary(melanoma)
+nrow(melanoma)
+
+# set time to years instead of days
+melanoma$time_years <- melanoma$time / 365.25
+
+# Factor the basic variables that we're interested in
+melanoma$status <- factor(melanoma$status,
+                          levels = c(2, 1, 3),
+                          labels = c('Alive', #Reference
+                                     'Melanoma death',
+                                     'Non-melanoma death'))
+
+melanoma$sex <- factor(melanoma$sex,
+                       labels = c('Male', 'Female'))
+
+melanoma$ulcer <- factor(melanoma$ulcer,
+                         labels=c('Present', 'Absent'))
+```
+
+Load Gmisc package from source
+```{r load-gmisc}
+# reps = c("http://ftp.sunet.se/pub/lang/CRAN",
+#          "http://cran.gforge.se")
+# install.packages("Gmisc", repos=reps, dependencies=TRUE, type="source")
+library(Gmisc)
+```
+
+Using getDescriptionStatsBy
+```{r use-getDesc}
+# A function that takes the variale name,
+# applies it to the melanoma dataset
+# and then runs the results by the status variable
+getT1Stat <- function(varname, digits=0) {
+  getDescriptionStatsBy(melanoma[, varname],
+                        melanoma$status,
+                        add_total_col=TRUE,
+                        show_all_values=TRUE,
+                        hrzl_prop=TRUE,
+                        statistics=FALSE,
+                        html=TRUE,
+                        digits=digits)
+}
+
+# Save everything in a list
+# This simplifies the row grouping
+table_data <- list()
+
+# Get the basic stats
+table_data[['Sex']] <- getT1Stat('sex')
+table_data[['Age']] <- getT1Stat('age')
+table_data[['Ulceraction']] <- getT1Stat('ulcer')
+table_data[['Thickness<sup>a</sup>']] <- getT1Stat('thickness', 1)
+```
+
+After running the previous code I loop through the list to extract the variable matrix and the rgroup/n.rgroup variables that I then input to my htmlTable function
+```{r loop-list}
+# Merge everything into a matrix
+rgroup <- c()
+n.rgroup <- c()
+output_data <- NULL
+for(varlabel in names(table_data)){
+  output_data <- rbind(output_data,
+                       table_data[[varlabel]])
+  rgroup <- c(rgroup, varlabel)
+  n.rgroup <- c(n.rgroup, nrow(table_data[[varlabel]]))
+}
+
+# add a column spanner for the death columns
+cgroup <- c('', 'Death')
+n.cgroup <- c(2, 2)
+colnames(output_data) <- gsub('[ ]*death', '', colnames(output_data))
+
+htmlTable(output_data, 
+          align='rrrr',
+          rgroup=rgroup,
+          n.rgroup=n.rgroup,
+          rgroupCSSeparaor='',
+          cgroup=cgroup,
+          n.cgroup=n.cgroup,
+          rowlabel='',
+          caption='Basic stats',
+          tfoot='<sup>a</sup> Also known as Breslow thickness',
+          ctable=TRUE)
+```
