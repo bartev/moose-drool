@@ -1,0 +1,38 @@
+Fibonacci sequence in R
+========================================================
+
+From my interview with JiWire on 1/15/14, this question came up.
+How to print out the Fibonacci sequence in R?
+
+This method eats up memory for large numbers.
+```{r bad-method}
+fib <- function(n) {
+  fibvals <- numeric(n)
+  if (n >= 1) fibvals[1] = 0
+  if (n >= 2) fibvals[2] = 1
+  if (n >= 3)
+    for (i in 3:n) {
+      fibvals[i] <- fibvals[i - 1] + fibvals[i - 2]
+    }
+  print(fibvals)
+}
+for (i in 1:5) fib(i)
+```
+Here's another way using a df
+
+http://www.r-bloggers.com/fibonacci-1-liners/
+```{r another-method}
+Find nth Fibonacci number
+fib1 <- function(n){
+  a = 0
+  b = 1
+  for(i in 1:n) {
+    t = b
+    b = a
+    a = a + t
+  }
+  print(a)
+}
+for (i in 1:5) fib1(i)
+```
+
