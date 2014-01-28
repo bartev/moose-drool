@@ -3,3 +3,4 @@ object Hi extends App {
 	println("Hi SBT, the time is " + now.toString("hh.mm aa"))
 	println("Hello SBT")
 }
+

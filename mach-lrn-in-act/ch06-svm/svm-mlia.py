@@ -274,14 +274,14 @@ def smoP(dataMatIn, classLabels, C, toler, maxIter, kTup=('lin', 0)):
 			for i in range(oS.m):
 				# call innerL to choose 2nd alpha and do optimization if possible
 				alphaPairsChanged += innerL(i, oS)
-				# print "fullSet, iter: %d i:%d, pairs changed %d" % (iter, i, alphaPairsChanged)
+				print "fullSet, iter: %d i:%d, pairs changed %d" % (iter, i, alphaPairsChanged)
 			iter += 1
 		else:
 			# go over non-bound values
 			nonBoundIs = np.nonzero((oS.alphas.A > 0) * (oS.alphas.A < C))[0]
 			for i in nonBoundIs:
 				alphaPairsChanged += innerL(i, oS)
-				# print "non-bound, iter: %d i:%d, pairs changed %d" % (iter, i, alphaPairsChanged)
+				print "non-bound, iter: %d i:%d, pairs changed %d" % (iter, i, alphaPairsChanged)
 			iter += 1
 		# toggle between entire set and non-bound loop
 		if entireSet: 
