@@ -1,0 +1,52 @@
+Best distribution of blue and red balls
+========================================================
+
+FB interview question
+1/16/14
+
+- You have 100 marbles, 1/2 are red, and the other 1/2 are blue.
+- Place the balls in 2 bags such that you maximize the probability of picking
+a blue ball.
+- Assume the probability of picking each bag is the same  
+P (blue) = P (blue|bag1)P (bag1) + P (blue|bag2)P (bag2)  
+= 1/2 × [P (blue|bag1) + P (blue|bag2)]  
+
+So we want to maximize  
+P (blue|bag1) + P (blue|bag2) 
+
+Caution: Don’t assume you have the same number of balls in each bag! define  
+b = number of blue balls in bag 1 (5) r = number of red balls in bag 1 (6)  
+P (blue|bag1) = b / b+r  
+P (blue|bag2) = (50 - b) / (50−b)+(50−r)  
+```{r libs}
+library(plyr)
+library(reshape2)
+library(ggplot2)
+```
+
+```{r prob-blue}
+prob_b <- function(b, r) {
+  b/(b + r) + (50 - b) / (100 - b - r)
+}
+```
+
+```{r create-df}
+df <- data.frame(r = 0:50)
+df <- mutate(df, b0 = prob_b(0, r), b1 = prob_b(1, r), b5 = prob_b(5, r), b49 = prob_b(49, r), b50 = prob_b(50, r))
+df.tidy <- melt(df, id=c('r'))
+head(df.tidy)
+
+df1 <- data.frame(r = 0:50)
+dfb <- data.frame(b = c(0:5, seq(10, 25, 5)))
+dfj <- expand.grid(df1$r, dfb$b)
+dfj <- rename(dfj, replace=c('Var1' = 'r', 'Var2' = 'b'))
+head(dfj)
+dfj <- mutate(dfj, pb = prob_b(b, r))
+```
+
+```{r plot-it}
+ggplot(df.tidy, aes(r, value, group=variable, color=variable)) + geom_line()
+ggplot(dfj, aes(r, pb, group=b, color=b)) + geom_line()
+ggplot(dfj, aes(r, b, color=pb)) + geom_point()
+```
+

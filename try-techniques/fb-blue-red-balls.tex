@@ -1,0 +1,35 @@
+\documentclass{article}
+
+\usepackage{Sweave}
+\begin{document}
+\input{fb-blue-red-balls-concordance}
+
+This was a question I had on an interview with FB on 1/16/14 with John Maier.
+
+\begin{itemize}
+  \item You have 100 marbles, $1/2$ are red, and the other $1/2$ are blue.
+	\item Place the balls in 2 bags such that you maximize the probability of picking a blue ball.
+	\item Assume the probability of picking each bag is the same
+\end{itemize}
+
+\begin{align}
+P(\text{blue}) & = P(\text{blue} | \text{bag1})P(\text{bag1}) + P(\text{blue} | \text{bag2})P(\text{bag2})\\
+ 		& = \frac{1}{2} \times \left[ P(\text{blue} | \text{bag1}) + P(\text{blue} | \text{bag2}) \right]\\
+\end{align}
+So we want to maximize
+\begin{align}
+P(\text{blue} | \text{bag1}) + P(\text{blue} | \text{bag2})
+\end{align}
+
+\noindent
+\hlred{Caution: Don't assume you have the same number of balls in each bag!}
+define
+\begin{align}
+b & = \text{number of blue balls in bag 1}\\
+r & = \text{number of red balls in bag 1}\\
+P(\text{blue} | \text{bag1}) & = \frac{b}{b + r}\\
+P(\text{blue} | \text{bag2}) & = \frac{50 - b}{(50 - b) + (50 -r)}\\
+\end{align}
+
+
+\end{document}
