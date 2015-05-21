@@ -1,0 +1,10 @@
+[remoteMsql]
+host='127.0.0.1'
+port=replace_with_port_on_laptop
+user='om_ro'
+password='replace_with_password'
+
+[msql-from-server]
+host='ssm-db-vip'
+user='om_ro'
+password='replace_with_password'
